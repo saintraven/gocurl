@@ -5,6 +5,7 @@ import (
   "os"
   "net/http"
   "io"
+  "strings"
 )
 
 func main () {
@@ -13,9 +14,15 @@ func main () {
     fmt.Println("URL was not given")
     return 
   } 
+
+  request := os.Args[1]
  
-  url := os.Args[1]
-  resp, err := http.Get(url)
+  if !strings.HasPrefix(request, "http://") && !strings.HasPrefix(request, "https://") {
+    request = "https://" + request
+  } 
+
+  resp, err := http.Get(request)
+ 
   if err != nil {
     fmt.Println(err)
     return
