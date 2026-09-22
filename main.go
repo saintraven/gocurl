@@ -17,7 +17,9 @@ func main () {
 
   request := os.Args[1]
   showHeaders := false
- 
+  showBody := true 
+
+
   if os.Args[1] == "-i" {
     showHeaders = true 
     
@@ -37,6 +39,25 @@ func main () {
   } 
 
 
+  if os.Args[1] == "-I" {
+    showHeaders = true 
+    showBody = false  
+    
+    if len(os.Args) < 3 {
+      fmt.Println("URL was not given")
+      return 
+    }
+
+    if os.Args[2] == "" {
+      fmt.Println("URL was not given")
+      return  
+    } 
+    request = os.Args[2]
+  
+  } else {
+    request = os.Args[1] 
+  } 
+ 
   if !strings.HasPrefix(request, "http://") && !strings.HasPrefix(request, "https://") {
     request = "https://" + request
   } 
@@ -58,5 +79,6 @@ func main () {
     } 
   }
 
-    io.Copy(os.Stdout, resp.Body)
+  if showBody {
+    io.Copy(os.Stdout, resp.Body) } 
 }
