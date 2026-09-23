@@ -6,65 +6,79 @@ import (
   "net/http"
   "io"
   "strings"
+  "errors"
 )
+
+type Config struct {
+  URL string
+  Method string
+  ShowHeaders bool
+  ShowBody bool
+}
+
+func parseArgs(args []string) (Config, error) {
+  config := Config{
+    Method:   "GET",
+    ShowHeaders: false,
+    ShowBody: true, 
+  }
+  
+  if len(args) < 1 {
+    return config, errors.New("URL was not given") 
+  }
+  
+  config.URL= args[0]
+   
+  if args[0] == "-i" {
+    config.ShowHeaders = true 
+  
+    if len(args) < 2 {
+      return config, errors.New("URL was not given")
+    }
+
+    if args[1] == "" {
+      return config, errors.New("URL was not given")
+    } 
+    
+    config.URL = args[1]
+      
+  } else if args[0] == "-I" {
+  
+    config.ShowHeaders = true 
+    config.ShowBody = false 
+    config.Method = "HEAD"
+    
+    if len(args) < 2 {
+      return config, errors.New("URL was not given")
+    }
+    config.URL = args[1] 
+
+  } else {
+    config.URL = args[0]
+  } 
+
+  return config, nil 
+} 
+
 
 func main () {
   
-  if len(os.Args) < 2 {
-    fmt.Println("URL was not given")
-    return 
-  } 
-
-  request := os.Args[1]
-  showHeaders := false
-  showBody := true 
-  method := "GET"
-
-  if os.Args[1] == "-i" {
-    showHeaders = true 
-  
-    if len(os.Args) < 3 {
-      fmt.Println("URL was not given")
-      return 
-    }
-
-    if os.Args[2] == "" {
-      fmt.Println("URL was not given")
-      return  
-    } 
-    request = os.Args[2]
-      
-  } else if os.Args[1] == "-I" {
-  
-    showHeaders = true 
-    showBody = false 
-    method = "HEAD"
-    
-    if len(os.Args) < 3 {
-      fmt.Println("URL was not given")
-      return 
-    }
-
-    if os.Args[2] == "" {
-      fmt.Println("URL was not given")
-      return  
-    } 
-    request = os.Args[2]
-  
-  } else {
-    request = os.Args[1]
-  } 
-
-  if !strings.HasPrefix(request, "http://") && !strings.HasPrefix(request, "https://") {
-    request = "https://" + request
-  } 
-
-  req, err := http.NewRequest(method, request, nil)
- 
+  config, err := parseArgs(os.Args[1:])
   if err != nil {
     fmt.Println(err)
     return
   } 
+
+  if !strings.HasPrefix(config.URL, "http://") && !strings.HasPrefix(config.URL, "https://") {
+    config.URL = "https://" + config.URL
+  } 
+
+  req, err := http.NewRequest(config.Method, config.URL, nil)
+ 
+  if err != nil {
+    fmt.Println(err)
+    return
+  }
 
   client := &http.Client{}
   resp, err := client.Do(req)
@@ -78,11 +92,11 @@ func main () {
   
   fmt.Println(resp.Status)
 
-  if showHeaders {
+  if config.ShowHeaders {
     for key, values := range resp.Header {
       fmt.Printf("%s: %s\n", key, strings.Join(values, ", ")) 
     } 
   }
 
-  if showBody {  io.Copy(os.Stdout, resp.Body) } 
+  if config.ShowBody {  io.Copy(os.Stdout, resp.Body) } 
 }
