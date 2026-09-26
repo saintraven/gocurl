@@ -60,7 +60,7 @@ func parseArgs(args []string) (Config, error) {
   return config, nil 
 } 
 
-func normalizeURL (url string) string {
+func NormalizeURL (url string) string {
 
   if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
     url = "https://" + url 
@@ -69,7 +69,7 @@ func normalizeURL (url string) string {
   return url 
 }
 
-func doRequest (method string, url string) (*http.Response, error) {
+func DoRequest (method string, url string) (*http.Response, error) {
   
   request, err := http.NewRequest(method, url, nil)
 
@@ -87,7 +87,37 @@ func doRequest (method string, url string) (*http.Response, error) {
   return response, err 
 }
 
-func printResponse (resp *http.Response, config Config) {
+func main () {
+  
+  config, err := parseArgs(os.Args[1:])
+  if err != nil {
+    fmt.Println(err)
+    return
+  } 
+
+  config.URL =  NormalizeURL(config.URL)
+
+  resp, err := DoRequest(config.Method, config.URL)
+
+ //  req, err := http.NewRequest(config.Method, config.URL, nil)
+// 
+//  if err != nil {
+//    fmt.Println(err)
+//    return
+//  }
+//
+//  client := &http.Client{}
+//  resp, err := client.Do(req)
+//
+//  if err != nil {
+//    fmt.Println(err)
+//    return
+//  }
+
+  if err != nil {
+    fmt.Println(err)
+    return 
+  }
 
   defer resp.Body.Close()
   fmt.Println(resp.Status)
@@ -99,24 +129,4 @@ func printResponse (resp *http.Response, config Config) {
   }
 
   if config.ShowBody {  io.Copy(os.Stdout, resp.Body) } 
-}
-
-
-func main () {
-  
-  config, err := parseArgs(os.Args[1:])
-  if err != nil {
-    fmt.Println(err)
-    return
-  } 
-
-  config.URL =  normalizeURL(config.URL)
-  resp, err := doRequest(config.Method, config.URL)
-
-  if err != nil {
-    fmt.Println(err)
-    return 
-  }
-
-  printResponse(resp, config) 
 }
