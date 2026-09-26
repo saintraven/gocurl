@@ -60,6 +60,15 @@ func parseArgs(args []string) (Config, error) {
   return config, nil 
 } 
 
+func NormalizeURL (url string) string {
+
+  if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+    url = "https://" + url 
+  }
+
+  return url 
+}
+
 
 func main () {
   
@@ -69,10 +78,7 @@ func main () {
     return
   } 
 
-  if !strings.HasPrefix(config.URL, "http://") && !strings.HasPrefix(config.URL, "https://") {
-    config.URL = "https://" + config.URL
-  } 
-
+  config.URL =  NormalizeURL(config.URL)
   req, err := http.NewRequest(config.Method, config.URL, nil)
  
   if err != nil {
@@ -89,7 +95,6 @@ func main () {
   }
 
   defer resp.Body.Close()
-  
   fmt.Println(resp.Status)
 
   if config.ShowHeaders {
